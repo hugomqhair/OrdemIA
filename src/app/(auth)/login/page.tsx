@@ -49,7 +49,20 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     try {
         await signInWithGoogle();
-        router.push("/");
+        const idToken = await auth.currentUser?.getIdToken();
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ idToken }),
+        });
+
+        if (response.ok) {
+            router.push("/");
+        } else {
+            throw new Error("Falha ao criar sessão");
+        }
     } catch (error) {
         toast({
             variant: "destructive",
@@ -61,11 +74,8 @@ export default function LoginPage() {
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
     try {
-        console.log('Login')
         await signInWithEmail(data.email, data.password);
         const idToken = await auth.currentUser?.getIdToken();
-        idToken
-        console.log('idToken', idToken)
         const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: {
@@ -73,8 +83,6 @@ export default function LoginPage() {
             },
             body: JSON.stringify({ idToken }),
         });
-
-        console.log('response', response)
 
         if (response.ok) {
             router.push("/");
